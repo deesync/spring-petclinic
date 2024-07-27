@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'petclinic'
+        DOKERHUB_REPO = 'desync/petc'
         DOCKER_TAG = "${BUILD_NUMBER}"
         MAVEN_DOCKER_IMAGE = 'maven:3.9.5-eclipse-temurin-17'
     }
@@ -85,8 +86,8 @@ pipeline {
             steps {
                 script {
                     sh "echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin"
-                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    sh "docker push ${DOCKER_IMAGE}:latest"
+                    sh "docker push ${DOKERHUB_REPO}:${DOCKER_TAG}"
+                    sh "docker push ${DOKERHUB_REPO}:latest"
                 }
             }
             post {
