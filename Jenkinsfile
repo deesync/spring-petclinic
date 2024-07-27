@@ -36,27 +36,27 @@ pipeline {
             }
         }
 
-        // stage('Test') {
-        //     agent {
-        //         docker {
-        //             image "${MAVEN_DOCKER_IMAGE}"
-        //             args '-v $HOME/.m2:/root/.m2'
-        //         }
-        //     }
-        //     steps {
-        //         sh '''
-        //             mvn test \
-        //             -Dcheckstyle.skip=true \
-        //             -Dspring-javaformat.skip=true \
-        //             -Denforcer.skip=true
-        //         '''
-        //     }
-        //     post {
-        //         always {
-        //             junit '**/target/surefire-reports/TEST-*.xml'
-        //         }
-        //     }
-        // }
+        stage('Test') {
+            agent {
+                docker {
+                    image "${MAVEN_DOCKER_IMAGE}"
+                    args '-v $HOME/.m2:/root/.m2'
+                }
+            }
+            steps {
+                sh '''
+                    mvn test \
+                    -Dcheckstyle.skip=true \
+                    -Dspring-javaformat.skip=true \
+                    -Denforcer.skip=true
+                '''
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/TEST-*.xml'
+                }
+            }
+        }
 
         stage('Create Dockerfile') {
             steps {
@@ -87,7 +87,7 @@ pipeline {
                 script {
                     sh "echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin"
                     sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    sh "docker push ${DOCKER_IMAGE}:latest"
+                    // sh "docker push ${DOCKER_IMAGE}:latest"
                 }
             }
             post {
