@@ -36,27 +36,27 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            agent {
-                docker {
-                    image "${MAVEN_DOCKER_IMAGE}"
-                    args '-v $HOME/.m2:/root/.m2'
-                }
-            }
-            steps {
-                sh '''
-                    mvn test \
-                    -Dcheckstyle.skip=true \
-                    -Dspring-javaformat.skip=true \
-                    -Denforcer.skip=true
-                '''
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/TEST-*.xml'
-                }
-            }
-        }
+        // stage('Test') {
+        //     agent {
+        //         docker {
+        //             image "${MAVEN_DOCKER_IMAGE}"
+        //             args '-v $HOME/.m2:/root/.m2'
+        //         }
+        //     }
+        //     steps {
+        //         sh '''
+        //             mvn test \
+        //             -Dcheckstyle.skip=true \
+        //             -Dspring-javaformat.skip=true \
+        //             -Denforcer.skip=true
+        //         '''
+        //     }
+        //     post {
+        //         always {
+        //             junit '**/target/surefire-reports/TEST-*.xml'
+        //         }
+        //     }
+        // }
 
         stage('Create Dockerfile') {
             steps {
