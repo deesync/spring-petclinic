@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'petclinic'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        MAVEN_DOCKER_IMAGE = 'maven:3.8.4-openjdk-11'
+        MAVEN_DOCKER_IMAGE = 'maven:3.9.5-eclipse-temurin-17'
     }
 
     triggers {
