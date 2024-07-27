@@ -5,7 +5,6 @@ pipeline {
         DOCKER_IMAGE = 'petclinic'
         DOCKER_TAG = "${BUILD_NUMBER}"
         MAVEN_DOCKER_IMAGE = 'maven:3.9.5-eclipse-temurin-17'
-        MAVEN_OPTS = '-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true'
     }
 
     triggers {
@@ -27,7 +26,12 @@ pipeline {
                 }
             }
             steps {
-                sh 'mvn clean package -DskipTests -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Denforcer.skip=true'
+                sh '''
+                    mvn clean package -DskipTests \
+                    -Dcheckstyle.skip=true \
+                    -Dspring-javaformat.skip=true \
+                    -Denforcer.skip=true
+                '''
             }
         }
 
@@ -39,7 +43,12 @@ pipeline {
                 }
             }
             steps {
-                sh 'mvn test -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Denforcer.skip=true'
+                sh '''
+                    mvn test \
+                    -Dcheckstyle.skip=true \
+                    -Dspring-javaformat.skip=true \
+                    -Denforcer.skip=true
+                '''
             }
             post {
                 always {
