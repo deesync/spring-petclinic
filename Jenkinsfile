@@ -22,6 +22,7 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
+                    reuseNode true
                     image "${MAVEN_DOCKER_IMAGE}"
                     args '-v $HOME/.m2:/root/.m2'
                 }
