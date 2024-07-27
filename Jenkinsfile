@@ -4,6 +4,11 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'petclinic'
         DOCKER_TAG = "${BUILD_NUMBER}"
+        MAVEN_DOCKER_IMAGE = 'maven:3.8.4-openjdk-11'
+    }
+
+    triggers {
+        githubPush()
     }
 
     stages {
@@ -14,12 +19,24 @@ pipeline {
         }
 
         stage('Build') {
+            agent {
+                docker {
+                    image "${MAVEN_DOCKER_IMAGE}"
+                    args '-v $HOME/.m2:/root/.m2'
+                }
+            }
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Test') {
+            agent {
+                docker {
+                    image "${MAVEN_DOCKER_IMAGE}"
+                    args '-v $HOME/.m2:/root/.m2'
+                }
+            }
             steps {
                 sh 'mvn test'
             }
