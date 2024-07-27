@@ -57,6 +57,19 @@ pipeline {
             }
         }
 
+        stage('Create Dockerfile') {
+            steps {
+                script {
+                    writeFile file: 'Dockerfile', text: '''
+                        FROM eclipse-temurin:17-jre-alpine
+                        VOLUME /tmp
+                        COPY target/*.jar app.jar
+                        ENTRYPOINT ["java","-jar","/app.jar"]
+                    '''
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
