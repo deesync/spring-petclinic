@@ -5,6 +5,7 @@ pipeline {
         DOCKER_IMAGE = 'desync/petc'
         DOCKER_TAG = "${BUILD_NUMBER}"
         MAVEN_DOCKER_IMAGE = 'maven:3.9.5-eclipse-temurin-17'
+        SONAR_PROJECT_KEY = 'spring-petclinic'
     }
 
     triggers {
@@ -18,12 +19,27 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.projectName='Spring PetClinic' \
+                        -Dsonar.sources=src/main/java \
+                        -Dsonar.tests=src/test/java \
+                        -Dsonar.java.binaries=target/classes
+                    """
+                }
+            }
+        }
+
         stage('Build') {
             agent {
                 docker {
                     reuseNode true
                     image "${MAVEN_DOCKER_IMAGE}"
-                    args '-v $HOME/.m2:/.m2'
+                    args '-v $HOME/.m2:/root/.m2'
                 }
             }
             steps {
@@ -40,7 +56,7 @@ pipeline {
             agent {
                 docker {
                     image "${MAVEN_DOCKER_IMAGE}"
-                    args '-v $HOME/.m2:/.m2'
+                    args '-v $HOME/.m2:/root/.m2'
                 }
             }
             steps {
