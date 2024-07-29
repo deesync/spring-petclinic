@@ -25,7 +25,7 @@ pipeline {
             agent {
                 docker {
                     image 'sonarsource/sonar-scanner-cli:latest'
-                    args '-v $HOME/.sonar:/opt/sonar-scanner/.sonar'
+                    args '-v $HOME/.sonar:/home/sonar/.sonar -v ${WORKSPACE}:/usr/src'
                 }
             }
             environment {
@@ -37,7 +37,9 @@ pipeline {
                     -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                     -Dsonar.sources=. \
                     -Dsonar.host.url=${SONAR_SERVER_URL} \
-                    -Dsonar.login=${SONAR_TOKEN}
+                    -Dsonar.login=${SONAR_TOKEN} \
+                    -Dsonar.java.binaries=target/classes \
+                    -Dsonar.projectBaseDir=/usr/src
                 """
             }
         }
