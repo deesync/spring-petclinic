@@ -21,29 +21,6 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            agent {
-                docker {
-                    image 'sonarsource/sonar-scanner-cli:latest'
-                    args '-v $HOME/.sonar:/home/sonar/.sonar -v ${WORKSPACE}:/usr/src'
-                }
-            }
-            environment {
-                SONAR_TOKEN = credentials('jenkins-sonar')
-            }
-            steps {
-                sh """
-                    sonar-scanner \
-                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=${SONAR_SERVER_URL} \
-                    -Dsonar.login=${SONAR_TOKEN} \
-                    -Dsonar.java.binaries=target/classes \
-                    -Dsonar.projectBaseDir=/usr/src
-                """
-            }
-        }
-
         stage('Build') {
             agent {
                 docker {
@@ -84,6 +61,29 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli:latest'
+                    args '-v $HOME/.sonar:/home/sonar/.sonar -v ${WORKSPACE}:/usr/src'
+                }
+            }
+            environment {
+                SONAR_TOKEN = credentials('jenkins-sonar')
+            }
+            steps {
+                sh """
+                    sonar-scanner \
+                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=${SONAR_SERVER_URL} \
+                    -Dsonar.login=${SONAR_TOKEN} \
+                    -Dsonar.java.binaries=target/classes \
+                    -Dsonar.projectBaseDir=/usr/src
+                """
+            }
+        }        
+
         stage('Create Dockerfile') {
             steps {
                 script {
@@ -112,7 +112,13 @@ pipeline {
             steps {
                 script {
                     sh 'echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin'
-                    sh 'docker push ${DOCKER_IMAGE}:${DOCKER_TAG}'
+                    
+                    // Tag the image as latest
+                    sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                    
+                    // Push both tags
+                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    sh "docker push ${DOCKER_IMAGE}:latest"
                 }
             }
             post {
