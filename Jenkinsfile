@@ -5,7 +5,9 @@ pipeline {
         DOCKER_IMAGE = 'desync/petc'
         DOCKER_TAG = "${BUILD_NUMBER}"
         MAVEN_DOCKER_IMAGE = 'maven:3.9.5-eclipse-temurin-17'
+
         SONAR_PROJECT_KEY = 'spring-petclinic'
+        SONAR_SERVER_URL = 'http://localhost:9000'
     }
 
     triggers {
@@ -20,17 +22,23 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                        -Dsonar.projectName='spring-petclinic' \
-                        -Dsonar.sources=src/main/java \
-                        -Dsonar.tests=src/test/java \
-                        -Dsonar.java.binaries=target/classes
-                    """
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli:latest'
+                    args '-v $HOME/.sonar:/opt/sonar-scanner/.sonar'
                 }
+            }
+            environment {
+                SONAR_TOKEN = credentials('jenkins-sonar')
+            }
+            steps {
+                sh """
+                    sonar-scanner \
+                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=${SONAR_SERVER_URL} \
+                    -Dsonar.login=${SONAR_TOKEN}
+                """
             }
         }
 
