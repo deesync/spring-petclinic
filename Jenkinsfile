@@ -7,7 +7,7 @@ pipeline {
         MAVEN_DOCKER_IMAGE = 'maven:3.9.5-eclipse-temurin-17'
 
         SONAR_PROJECT_KEY = 'spring-petclinic'
-        SONAR_SERVER_URL = 'http://localhost:9000'
+        SONAR_SERVER_URL = 'http://192.168.56.71:9000'
     }
 
     triggers {
