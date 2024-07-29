@@ -21,6 +21,29 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            agent {
+                docker {
+                    image 'sonarsource/sonar-scanner-cli:latest'
+                    args '-v $HOME/.sonar:/home/sonar/.sonar -v ${WORKSPACE}:/usr/src'
+                }
+            }
+            environment {
+                SONAR_TOKEN = credentials('jenkins-sonar')
+            }
+            steps {
+                sh '''
+                    sonar-scanner \
+                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=${SONAR_SERVER_URL} \
+                    -Dsonar.login=${SONAR_TOKEN} \
+                    -Dsonar.java.binaries=target/classes \
+                    -Dsonar.projectBaseDir=/usr/src
+                '''
+            }
+        }   
+        
         stage('Build') {
             agent {
                 docker {
@@ -60,29 +83,6 @@ pipeline {
                 }
             }
         }
-
-        stage('SonarQube Analysis') {
-            agent {
-                docker {
-                    image 'sonarsource/sonar-scanner-cli:latest'
-                    args '-v $HOME/.sonar:/home/sonar/.sonar -v ${WORKSPACE}:/usr/src'
-                }
-            }
-            environment {
-                SONAR_TOKEN = credentials('jenkins-sonar')
-            }
-            steps {
-                sh """
-                    sonar-scanner \
-                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=${SONAR_SERVER_URL} \
-                    -Dsonar.login=${SONAR_TOKEN} \
-                    -Dsonar.java.binaries=target/classes \
-                    -Dsonar.projectBaseDir=/usr/src
-                """
-            }
-        }        
 
         stage('Create Dockerfile') {
             steps {
