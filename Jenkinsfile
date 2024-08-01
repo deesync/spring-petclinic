@@ -113,10 +113,8 @@ pipeline {
                 script {
                     sh 'echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin'
                     
-                    // Tag the image as latest
                     sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                     
-                    // Push both tags
                     sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
                     sh "docker push ${DOCKER_IMAGE}:latest"
                 }
@@ -129,8 +127,36 @@ pipeline {
         }
 
         stage('Deploy') {
+            environment {
+                DEPLOY_SERVER_URL = '192.168.56.70'
+                DEPLOY_DIR = '/opt/deploy'
+                DEPLOY_CREDS = credentials('deployment-server')
+            }
             steps {
-                sh "docker run -d -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                script {
+                    // Create a docker-compose.yml file
+                    writeFile file: 'docker-compose.yml', text: """
+                        services:
+                        petclinic:
+                            image: ${DOCKER_IMAGE}:latest
+                            ports:
+                            - "8080:8080"
+                            restart: always
+                    """
+
+                    // Copy the docker-compose file to the server and deploy
+                    sshagent(credentials: [DEPLOY_CREDS]) {
+                        sh "scp docker-compose.yml ${DEPLOY_CREDS_USR}@${DEPLOY_SERVER_URL}:${DEPLOY_DIR}"
+                        
+                        sh """
+                            ssh ${DEPLOY_CREDS_USR}@${DEPLOY_SERVER_URL} '
+                                cd ${DEPLOY_DIR} && 
+                                docker-compose pull && 
+                                docker-compose up -d --force-recreate
+                            '
+                        """
+                    }
+                }
             }
         }
     }
