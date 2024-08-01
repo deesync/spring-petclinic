@@ -128,33 +128,46 @@ pipeline {
 
         stage('Deploy') {
             environment {
-                DEPLOY_SERVER_URL = '192.168.56.70'
+                CONTAINER_NAME = 'petclinic'
+                DEPLOY_SERVER_URL = '192.168.56.20'
                 DEPLOY_DIR = '/opt/deploy'
                 DEPLOY_CREDS = credentials('deployment-server')
+                DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
             }
             steps {
                 script {
                     // Create a docker-compose.yml file
                     writeFile file: 'docker-compose.yml', text: """
                         services:
-                        petclinic:
-                            image: ${DOCKER_IMAGE}:latest
-                            ports:
-                            - "8080:8080"
-                            restart: always
+                            petclinic:
+                                image: ${DOCKER_IMAGE}:latest
+                                ports:
+                                - "8080:8080"
+                                restart: always
                     """
 
                     // Copy the docker-compose file to the server and deploy
-                    sshagent(credentials: [DEPLOY_CREDS]) {
+                    sshagent(credentials: ['deployment-server']) {
                         sh "scp docker-compose.yml ${DEPLOY_CREDS_USR}@${DEPLOY_SERVER_URL}:${DEPLOY_DIR}"
                         
+                        // Login to Docker Hub, check existing container, remove if exists, pull new image, and deploy
                         sh """
                             ssh ${DEPLOY_CREDS_USR}@${DEPLOY_SERVER_URL} '
-                                cd ${DEPLOY_DIR} && 
-                                docker-compose pull && 
-                                docker-compose up -d --force-recreate
+                                echo ${DOCKER_HUB_CREDENTIALS_PSW} | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin &&
+                                cd ${DEPLOY_DIR} &&
+                                if docker ps -a | grep -q ${CONTAINER_NAME}; then
+                                    echo "Container ${CONTAINER_NAME} exists. Removing it."
+                                    docker stop ${CONTAINER_NAME} || true
+                                    docker rm ${CONTAINER_NAME} || true
+                                else
+                                    echo "Container ${CONTAINER_NAME} does not exist. Proceeding with deployment."
+                                fi &&
+                                docker compose pull && 
+                                docker compose up -d --force-recreate &&
+                                docker logout
                             '
                         """
+                        
                     }
                 }
             }
