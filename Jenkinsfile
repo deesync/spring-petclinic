@@ -44,9 +44,10 @@ pipeline {
                             -Dsonar.java.binaries=target/classes \
                             -Dsonar.projectBaseDir=/usr/src
                         '''
-                    }
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        echo "This incident will be reported :)"
+
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            echo "This incident will be reported :)"
+                        }
                     }
                 }   
                 
