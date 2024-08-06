@@ -45,10 +45,8 @@ pipeline {
                             -Dsonar.projectBaseDir=/usr/src
                         '''
                     }
-                    post {
-                        failure {
-                            echo 'SonarQube analysis failed! Ignore to continue the pipeline...'
-                        }
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        echo "This incident will be reported :)"
                     }
                 }   
                 
