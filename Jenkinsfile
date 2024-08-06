@@ -22,6 +22,7 @@ pipeline {
         }
 
         stage('Analyse & Build') {
+            failFast false
             parallel {
                 stage('SonarQube Analysis') {
                     agent {
@@ -43,6 +44,11 @@ pipeline {
                             -Dsonar.java.binaries=target/classes \
                             -Dsonar.projectBaseDir=/usr/src
                         '''
+                    }
+                    post {
+                        failure {
+                            echo 'SonarQube analysis failed! Ignore to continue the pipeline...'
+                        }
                     }
                 }   
                 
