@@ -46,10 +46,10 @@ pipeline {
                                 -Dsonar.projectBaseDir=/usr/src
                             '''
                         }
-                        post {
-                            failure {
-                                echo 'This stage failed, but the pipeline will continue'
-                            }
+                    }
+                    post {
+                        failure {
+                            echo 'This stage failed, but the pipeline will continue'
                         }
                     }
                 }
