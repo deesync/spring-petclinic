@@ -21,44 +21,46 @@ pipeline {
             }
         }
 
-        // stage('SonarQube Analysis') {
-        //     agent {
-        //         docker {
-        //             image 'sonarsource/sonar-scanner-cli:latest'
-        //             args '-v $HOME/.sonar:/home/sonar/.sonar -v ${WORKSPACE}:/usr/src'
-        //         }
-        //     }
-        //     environment {
-        //         SONAR_TOKEN = credentials('jenkins-sonar')
-        //     }
-        //     steps {
-        //         sh '''
-        //             sonar-scanner \
-        //             -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-        //             -Dsonar.sources=. \
-        //             -Dsonar.host.url=${SONAR_SERVER_URL} \
-        //             -Dsonar.login=${SONAR_TOKEN} \
-        //             -Dsonar.java.binaries=target/classes \
-        //             -Dsonar.projectBaseDir=/usr/src
-        //         '''
-        //     }
-        // }   
-        
-        stage('Build') {
-            agent {
-                docker {
-                    reuseNode true
-                    image "${MAVEN_DOCKER_IMAGE}"
-                    args '-v $HOME/.m2:/root/.m2'
+        parallel {
+            stage('SonarQube Analysis') {
+                agent {
+                    docker {
+                        image 'sonarsource/sonar-scanner-cli:latest'
+                        args '-v $HOME/.sonar:/home/sonar/.sonar -v ${WORKSPACE}:/usr/src'
+                    }
                 }
-            }
-            steps {
-                sh '''
-                    mvn clean package -DskipTests \
-                    -Dcheckstyle.skip=true \
-                    -Dspring-javaformat.skip=true \
-                    -Denforcer.skip=true
-                '''
+                environment {
+                    SONAR_TOKEN = credentials('jenkins-sonar')
+                }
+                steps {
+                    sh '''
+                        sonar-scanner \
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=${SONAR_SERVER_URL} \
+                        -Dsonar.login=${SONAR_TOKEN} \
+                        -Dsonar.java.binaries=target/classes \
+                        -Dsonar.projectBaseDir=/usr/src
+                    '''
+                }
+            }   
+            
+            stage('Build') {
+                agent {
+                    docker {
+                        reuseNode true
+                        image "${MAVEN_DOCKER_IMAGE}"
+                        args '-v $HOME/.m2:/root/.m2'
+                    }
+                }
+                steps {
+                    sh '''
+                        mvn clean package -DskipTests \
+                        -Dcheckstyle.skip=true \
+                        -Dspring-javaformat.skip=true \
+                        -Denforcer.skip=true
+                    '''
+                }
             }
         }
 
