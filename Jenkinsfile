@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        stage('Analyse & Build') {
+        stage('Analyze & Build') {
             failFast false
             parallel {
                 stage('SonarQube Analysis') {
