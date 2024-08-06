@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis & Build') {
+        stage('Analyse & Build') {
             parallel {
                 stage('SonarQube Analysis') {
                     agent {
@@ -61,6 +61,11 @@ pipeline {
                             -Dspring-javaformat.skip=true \
                             -Denforcer.skip=true
                         '''
+                    }
+                    post {
+                        success {
+                            archiveArtifacts(artifacts: '**/target/*.jar', allowEmptyArchive: true)
+                        }
                     }
                 }
             }
