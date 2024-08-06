@@ -35,21 +35,24 @@ pipeline {
                         SONAR_TOKEN = credentials('jenkins-sonar')
                     }
                     steps {
-                        sh '''
-                            sonar-scanner \
-                            -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=${SONAR_SERVER_URL} \
-                            -Dsonar.login=${SONAR_TOKEN} \
-                            -Dsonar.java.binaries=target/classes \
-                            -Dsonar.projectBaseDir=/usr/src
-                        '''
-
                         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                            echo "This incident will be reported :)"
+                            sh '''
+                                sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                -Dsonar.sources=. \
+                                -Dsonar.host.url=${SONAR_SERVER_URL} \
+                                -Dsonar.login=${SONAR_TOKEN} \
+                                -Dsonar.java.binaries=target/classes \
+                                -Dsonar.projectBaseDir=/usr/src
+                            '''
+                        }
+                        post {
+                            failure {
+                                echo 'This stage failed, but the pipeline will continue'
+                            }
                         }
                     }
-                }   
+                }
                 
                 stage('Build') {
                     agent {
